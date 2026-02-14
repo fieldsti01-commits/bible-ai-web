@@ -1,114 +1,176 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 export default function Home() {
-  const [input, setInput] = useState("");
-  const [reply, setReply] = useState(null);
-  const [raw, setRaw] = useState(null);
-  const [error, setError] = useState("");
+  const [prompt, setPrompt] = useState("");
   const [loading, setLoading] = useState(false);
+  const [reply, setReply] = useState(null);
+  const [error, setError] = useState("");
 
-  async function handleSubmit() {
+  const canSend = useMemo(() => prompt.trim().length > 0 && !loading, [prompt, loading]);
+
+  async function ask() {
     setError("");
     setReply(null);
-    setRaw(null);
 
-    if (!input.trim()) return;
+    const userText = prompt.trim();
+    if (!userText) {
+      setError("Please type a question first.");
+      return;
+    }
 
     setLoading(true);
+
     try {
+      // This "tone" string gets passed to your API route so the model stays consistent.
+      // Your route.js should combine this with its system prompt.
+      const discipleTone =
+        "Respond like a mature disciple of Jesus: gentle, compassionate, and honest. " +
+        "Encourage repentance and obedience when needed, without condemnation. " +
+        "Give clear biblical wisdom using the CEB translation when quoting. " +
+        "Include relevant Scripture references (book + chapter:verse). " +
+        "End with one reflective question. Optional: include a short prayer if fitting.";
+
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: input }),
+        body: JSON.stringify({
+          input: userText,      // IMPORTANT: your API expects "input"
+          tone: discipleTone,   // optional, but nice to pass through
+        }),
       });
 
       const data = await res.json().catch(() => ({}));
-      setRaw(data);
 
       if (!res.ok) {
-        setError(data?.error || `Request failed (${res.status})`);
-      } else {
-        setReply(data);
+        const msg =
+          data?.error ||
+          data?.message ||
+          `Request failed (${res.status}). Check your API route and environment variables.`;
+        throw new Error(msg);
       }
+
+      // Your API seems to return an object with fields like:
+      // summary / scripture (array) / practical_steps / reflection / optional_prayer / raw
+      setReply(data);
     } catch (e) {
-      setError("Network error. Try refreshing the page.");
+      setError(e?.message || "Something went wrong. Try again.");
     } finally {
       setLoading(false);
     }
   }
 
+  function onKeyDown(e) {
+    // Cmd+Enter on iPad keyboard / external keyboard
+    if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+      e.preventDefault();
+      if (canSend) ask();
+    }
+  }
+
   return (
-    <main className="container">
-      <h1 className="title">Bible AI</h1>
+    <main>
+      <h1>Bible AI</h1>
+      <div className="subtitle">
+        Ask for biblical guidance (CEB). Gentle, disciple-like wisdom with Scripture.
+      </div>
 
       <textarea
-        className="input"
-        placeholder="Ask for biblical guidance..."
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
+        value={prompt}
+        onChange={(e) => setPrompt(e.target.value)}
+        onKeyDown={onKeyDown}
+        placeholder="Ask a question, describe a situation, or share a struggle…"
       />
 
-      <button className="button" onClick={handleSubmit} disabled={loading}>
-        {loading ? "Seeking wisdom..." : "Seek Wisdom"}
+      <button onClick={ask} disabled={!canSend}>
+        {loading ? (
+          <>
+            <span className="spinner" />
+            Seeking Wisdom...
+          </>
+        ) : (
+          "Seek Wisdom"
+        )}
       </button>
 
+      {/* Loading shimmer */}
+      {loading && (
+        <div className="skeleton">
+          <div className="skeleton-bar" />
+          <div className="skeleton-bar" />
+          <div className="skeleton-bar" />
+          <div className="skeleton-bar" />
+        </div>
+      )}
+
+      {/* Error */}
       {error && (
-        <div className="card">
-          <h3 style={{ marginTop: 0 }}>Error</h3>
+        <div className="panel fade-in">
+          <div className="panel-title">Error</div>
           <p>{error}</p>
         </div>
       )}
 
+      {/* Response */}
       {reply && (
-        <div className="card">
-          {reply.summary && (
-            <>
-              <h2>Guidance</h2>
-              <p>{reply.summary}</p>
-            </>
-          )}
+        <div className="panel fade-in">
+          <div className="panel-title">Guidance</div>
 
-          {Array.isArray(reply.scripture) && (
+          {reply.summary && <p>{reply.summary}</p>}
+
+          {/* Scripture */}
+          {Array.isArray(reply.scripture) && reply.scripture.length > 0 && (
             <>
-              <h3>Scripture</h3>
+              <div className="section-title">Scripture</div>
               {reply.scripture.map((s, i) => (
-                <div key={i} className="scripture-block">
-                  <strong>{s.reference}</strong>
-                  <p>{s.why_it_applies}</p>
+                <div className="scripture-block" key={i}>
+                  <strong>{s.reference || "Scripture"}</strong>
+                  <p>{s.why_it_applies || s.text || ""}</p>
                 </div>
               ))}
             </>
           )}
 
-          {Array.isArray(reply.practical_steps) && (
+          {/* Practical steps */}
+          {Array.isArray(reply.practical_steps) && reply.practical_steps.length > 0 && (
             <>
-              <h3>Practical Steps</h3>
-              <ul>
+              <div className="section-title">Practical Steps</div>
+              <ol>
                 {reply.practical_steps.map((step, i) => (
                   <li key={i}>{step}</li>
                 ))}
-              </ul>
+              </ol>
             </>
           )}
 
-          {reply.reflection_question && (
+          {/* Reflection */}
+          {reply.reflection && (
             <>
-              <h3>Reflection</h3>
-              <p>{reply.reflection_question}</p>
+              <div className="section-title">Reflection</div>
+              <p>{reply.reflection}</p>
             </>
           )}
 
+          {/* Optional prayer */}
           {reply.optional_prayer && (
             <>
-              <h3>Optional Prayer</h3>
+              <div className="section-title">Optional Prayer</div>
               <p>{reply.optional_prayer}</p>
+            </>
+          )}
+
+          {/* Debug (optional) */}
+          {reply.raw && (
+            <>
+              <div className="section-title">Debug</div>
+              <pre style={{ whiteSpace: "pre-wrap", opacity: 0.75 }}>
+                {typeof reply.raw === "string" ? reply.raw : JSON.stringify(reply.raw, null, 2)}
+              </pre>
             </>
           )}
         </div>
       )}
-
     </main>
   );
 }
