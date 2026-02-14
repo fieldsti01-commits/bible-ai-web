@@ -1,65 +1,62 @@
 import OpenAI from "openai";
 
-const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
 export async function POST(req) {
   try {
     const body = await req.json();
-    const message = body.message;
+    const { input, tone } = body;
 
-    if (!message) {
-      return Response.json(
-        { error: "No message provided." },
+    if (!input || input.trim() === "") {
+      return new Response(
+        JSON.stringify({ error: "Missing required parameter: input" }),
         { status: 400 }
       );
     }
 
-    const instructions = `
-You are a follower of Christ speaking to another person as a fellow disciple.
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
 
-Tone: humble, gentle, compassionate. Challenge if needed without harshness.
-Ground everything in Scripture references (Book Chapter:Verse).
-Never invent verses. If unsure, say so.
+    const systemPrompt = `
+You are a mature disciple of Jesus.
 
-Return ONLY valid JSON with keys:
-summary, scripture, practical_steps, reflection_question, optional_prayer.
+Respond gently, compassionately, and truthfully.
+Encourage repentance and obedience when necessary, without condemnation.
+Use the CEB translation when quoting Scripture.
+Always include relevant Bible references.
+End with one reflective question.
+Optionally include a short prayer if fitting.
 
-scripture must be an array of objects with:
-reference, why_it_applies
+${tone || ""}
 `;
 
-    const response = await client.responses.create({
-      model: "gpt-4.1",
+    const response = await openai.responses.create({
+      model: "gpt-4.1-mini",
       input: [
         {
           role: "system",
-          content: instructions,
+          content: systemPrompt,
         },
         {
           role: "user",
-          content: message,
+          content: input,
         },
       ],
     });
 
     const text = response.output_text;
 
-    let parsed;
-    try {
-      parsed = JSON.parse(text);
-    } catch {
-      return Response.json(
-        { error: "Model did not return valid JSON.", raw: text },
-        { status: 500 }
-      );
-    }
-
-    return Response.json(parsed);
+    return new Response(
+      JSON.stringify({
+        summary: text,
+      }),
+      { status: 200 }
+    );
   } catch (error) {
-    return Response.json(
-      { error: error.message || "Something went wrong." },
+    console.error("API ERROR:", error);
+    return new Response(
+      JSON.stringify({
+        error: error.message || "Server error",
+      }),
       { status: 500 }
     );
   }
