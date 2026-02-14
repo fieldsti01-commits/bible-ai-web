@@ -109,14 +109,6 @@ export default function Home() {
         </div>
       )}
 
-      {raw && (
-        <div className="card">
-          <h3 style={{ marginTop: 0 }}>Debug (Raw API Response)</h3>
-          <pre style={{ whiteSpace: "pre-wrap" }}>
-            {JSON.stringify(raw, null, 2)}
-          </pre>
-        </div>
-      )}
     </main>
   );
 }
