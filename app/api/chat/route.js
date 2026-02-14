@@ -1,121 +1,101 @@
 // app/api/chat/route.js
+import OpenAI from "openai";
+
+export const runtime = "nodejs";
+
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+const responseSchema = {
+  name: "bible_ai_response",
+  schema: {
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      guidance: { type: "string" },
+      scripture: {
+        type: "array",
+        minItems: 5,
+        maxItems: 10,
+        items: {
+          type: "object",
+          additionalProperties: false,
+          properties: {
+            reference: { type: "string" },
+            summary: { type: "string" },
+            disciple_application: { type: "string" },
+            short_excerpt: {
+              type: "string",
+              description:
+                "Optional: a very short excerpt (keep it brief). If unsure, leave empty string.",
+            },
+          },
+          required: ["reference", "summary", "disciple_application", "short_excerpt"],
+        },
+      },
+      practical_steps: {
+        type: "array",
+        minItems: 3,
+        maxItems: 7,
+        items: { type: "string" },
+      },
+      reflection: { type: "string" },
+      optional_prayer: { type: "string" },
+    },
+    required: ["guidance", "scripture", "practical_steps", "reflection", "optional_prayer"],
+  },
+};
+
 export async function POST(req) {
   try {
     const body = await req.json().catch(() => ({}));
     const prompt = (body?.prompt || "").trim();
 
     if (!prompt) {
-      return Response.json(
-        { error: "Please type a question before clicking Seek Wisdom." },
-        { status: 400 }
-      );
+      return Response.json({ error: "No prompt provided." }, { status: 400 });
     }
 
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) {
+    const system = `
+You are "Bible AI" — a gentle but appropriately challenging disciple-maker.
+Tone: warm, humble, direct, hope-filled. Not harsh or shaming.
+Goal: deep discipleship. Encourage repentance, faith, wisdom, community, and next steps.
+
+IMPORTANT OUTPUT RULES:
+- Return ONLY valid JSON that matches the provided schema.
+- Provide 5–10 scripture items (reference + brief summary + disciple_application).
+- DO NOT paste long Scripture passages (summaries are preferred).
+- Reflection must appear ONLY in the "reflection" field (do NOT repeat inside the prayer).
+- Optional prayer must NOT include the reflection question.
+- Assume the user wants CEB-style plain language, but summarize (don’t quote long text).
+`;
+
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: system.trim() },
+        { role: "user", content: prompt },
+      ],
+      response_format: {
+        type: "json_schema",
+        json_schema: responseSchema,
+        strict: true,
+      },
+    });
+
+    const content = completion?.choices?.[0]?.message?.content || "";
+    let parsed;
+    try {
+      parsed = JSON.parse(content);
+    } catch {
       return Response.json(
-        { error: "Server missing OPENAI_API_KEY environment variable." },
+        { error: "Model returned non-JSON output.", raw: content },
         { status: 500 }
       );
     }
 
-    // You can change this anytime (example models shown in OpenAI docs).  [oai_citation:1‡OpenAI Developers](https://developers.openai.com/api/reference/resources/responses/methods/create)
-    const model = process.env.OPENAI_MODEL || "gpt-4.1";
-
-    const discipleStyle = `
-You are "Bible AI" — gentle, disciple-like, but willing to lovingly challenge when needed.
-Use clear, pastoral language. Avoid condemnation. Be truthful and compassionate.
-
-Return STRICT JSON ONLY with this shape:
-{
-  "guidance": "string",
-  "scriptures": [
-    { "reference": "Book X:Y–Z", "why_it_applies": "string" }
-  ],
-  "practical_steps": ["string", "string", "string"],
-  "reflection": "string",
-  "optional_prayer": "string"
-}
-
-Rules:
-- Provide 6 scriptures (not 2-3).
-- Each scripture: reference + 1–2 sentences why it applies.
-- Include 4–6 practical steps.
-- Reflection appears ONLY in the "reflection" field (do NOT repeat it in the prayer).
-- Optional prayer should NOT contain the reflection question.
-- Do not include any "debug" fields or extra keys.
-- If user asks about self-harm or immediate danger, urge them to seek immediate help.
-`.trim();
-
-    const payload = {
-      model,
-      // "input" is required by the Responses API.  [oai_citation:2‡OpenAI Developers](https://developers.openai.com/api/reference/resources/responses/methods/create)
-      input: [
-        {
-          role: "developer",
-          content: [{ type: "input_text", text: discipleStyle }],
-        },
-        {
-          role: "user",
-          content: [{ type: "input_text", text: prompt }],
-        },
-      ],
-    };
-
-    const r = await fetch("https://api.openai.com/v1/responses", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify(payload),
-    });
-
-    const data = await r.json();
-
-    if (!r.ok) {
-      const msg =
-        data?.error?.message ||
-        data?.message ||
-        "OpenAI request failed. Check your model name and API key.";
-      return Response.json({ error: msg }, { status: r.status });
-    }
-
-    // In SDKs there is output_text; with raw HTTP we safely extract text from output items.
-    // If your response comes back as JSON text, we parse it.
-    let text = "";
-    if (Array.isArray(data?.output)) {
-      for (const item of data.output) {
-        if (Array.isArray(item?.content)) {
-          for (const c of item.content) {
-            if (c?.type === "output_text" && typeof c?.text === "string") {
-              text += c.text;
-            }
-          }
-        }
-      }
-    }
-
-    // Fallback if text wasn’t found (rare)
-    if (!text && typeof data?.output_text === "string") text = data.output_text;
-
-    text = (text || "").trim();
-
-    // Parse STRICT JSON (as instructed)
-    let json;
-    try {
-      json = JSON.parse(text);
-    } catch {
-      return Response.json(
-        { error: "Model did not return valid JSON. Try again.", raw: text },
-        { status: 502 }
-      );
-    }
-
-    return Response.json({ reply: json });
+    return Response.json(parsed);
   } catch (err) {
     return Response.json(
-      { error: err?.message || "Server error." },
+      { error: err?.message || "Unknown server error." },
       { status: 500 }
     );
   }

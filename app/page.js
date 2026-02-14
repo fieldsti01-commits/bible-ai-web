@@ -1,3 +1,4 @@
+// app/page.js
 "use client";
 
 import { useMemo, useState } from "react";
@@ -5,8 +6,8 @@ import { useMemo, useState } from "react";
 export default function Home() {
   const [prompt, setPrompt] = useState("");
   const [reply, setReply] = useState(null);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const canSubmit = useMemo(() => prompt.trim().length > 0 && !loading, [prompt, loading]);
 
@@ -17,7 +18,7 @@ export default function Home() {
 
     const p = prompt.trim();
     if (!p) {
-      setError("Type a question first.");
+      setError("Please type a question first.");
       return;
     }
 
@@ -30,17 +31,13 @@ export default function Home() {
       });
 
       const data = await res.json().catch(() => ({}));
+
       if (!res.ok) {
         setError(data?.error || "Something went wrong.");
         return;
       }
 
-      if (!data?.reply) {
-        setError("No reply returned.");
-        return;
-      }
-
-      setReply(data.reply);
+      setReply(data);
     } catch (err) {
       setError(err?.message || "Network error.");
     } finally {
@@ -49,97 +46,123 @@ export default function Home() {
   }
 
   return (
-    <main className="page">
-      <div className="shell">
+    <main className="app">
+      <div className="bg" aria-hidden="true" />
+
+      <section className="shell">
         <header className="header">
           <h1 className="title">Bible AI</h1>
           <p className="subtitle">
-            Ask for biblical guidance (CEB). Gentle, disciple-like wisdom with Scripture.
+            Ask for biblical guidance (CEB-style). Gentle, disciple-like wisdom with Scripture.
           </p>
         </header>
 
-        <form className="form" onSubmit={onSubmit}>
+        <form className="card card--glass" onSubmit={onSubmit}>
+          <label className="label" htmlFor="prompt">
+            Your question
+          </label>
+
           <textarea
+            id="prompt"
             className="input"
-            placeholder="Ask for biblical guidance..."
+            placeholder="Example: Why do I struggle to trust God even when I say I believe?"
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
-            rows={3}
+            rows={4}
           />
 
-          <button className={`btn ${loading ? "btnLoading" : ""}`} type="submit" disabled={!canSubmit}>
-            {loading ? (
-              <span className="dots" aria-label="Loading">
-                <span>.</span><span>.</span><span>.</span>
-              </span>
-            ) : (
-              "Seek Wisdom"
-            )}
-          </button>
+          <div className="actions">
+            <button className="btn" type="submit" disabled={!canSubmit}>
+              {loading ? (
+                <>
+                  <span className="spinner" aria-hidden="true" />
+                  Seeking wisdom…
+                </>
+              ) : (
+                "Seek Wisdom"
+              )}
+            </button>
+            <span className="hint">
+              {loading ? "Generating guidance…" : "Tip: be honest + specific."}
+            </span>
+          </div>
         </form>
 
         {error ? (
-          <section className="card cardError" role="alert">
-            <h2 className="cardTitle">Error</h2>
-            <p className="muted">{error}</p>
+          <section className="card card--glass card--error" role="alert">
+            <h2 className="h2">Error</h2>
+            <p className="p">{error}</p>
           </section>
         ) : null}
 
         {loading ? (
-          <section className="card cardLoading" aria-live="polite">
-            <h2 className="cardTitle">Listening…</h2>
-            <p className="muted">Taking a moment to respond with Scripture and wisdom.</p>
-            <div className="skeleton">
-              <div className="skLine" />
-              <div className="skLine" />
-              <div className="skLine short" />
-            </div>
+          <section className="stack">
+            <SkeletonCard />
+            <SkeletonCard />
           </section>
         ) : null}
 
         {reply ? (
-          <section className="card">
-            <h2 className="cardTitle">Guidance</h2>
-            <p className="bodyText">{reply.guidance}</p>
+          <section className="stack">
+            <section className="card card--glass reveal">
+              <h2 className="h2">Guidance</h2>
+              <p className="p">{reply.guidance}</p>
 
-            <h3 className="sectionTitle">Scripture</h3>
-            <div className="stack">
-              {Array.isArray(reply.scriptures) &&
-                reply.scriptures.map((s, i) => (
-                  <div className="scriptureBlock" key={i}>
-                    <strong className="scriptureRef">{s.reference}</strong>
-                    <div className="muted">{s.why_it_applies}</div>
-                  </div>
+              <h3 className="h3">Scripture</h3>
+              <div className="scriptureGrid">
+                {(Array.isArray(reply.scripture) ? reply.scripture : []).map((s, i) => (
+                  <article className="scriptureCard" key={`${s.reference}-${i}`}>
+                    <div className="scriptureRef">{s.reference}</div>
+
+                    {s.short_excerpt?.trim() ? (
+                      <div className="scriptureExcerpt">“{s.short_excerpt.trim()}”</div>
+                    ) : null}
+
+                    <div className="scriptureSummary">{s.summary}</div>
+
+                    <div className="scriptureApply">
+                      <strong>Disciple step:</strong> {s.disciple_application}
+                    </div>
+                  </article>
                 ))}
-            </div>
+              </div>
 
-            {Array.isArray(reply.practical_steps) && reply.practical_steps.length > 0 ? (
-              <>
-                <h3 className="sectionTitle">Practical Steps</h3>
-                <ol className="list">
-                  {reply.practical_steps.map((p, i) => (
-                    <li key={i}>{p}</li>
-                  ))}
-                </ol>
-              </>
-            ) : null}
+              <h3 className="h3">Practical Steps</h3>
+              <ol className="list">
+                {(Array.isArray(reply.practical_steps) ? reply.practical_steps : []).map(
+                  (step, i) => (
+                    <li key={i}>{step}</li>
+                  )
+                )}
+              </ol>
 
-            {reply.reflection ? (
-              <>
-                <h3 className="sectionTitle">Reflection</h3>
-                <p className="bodyText">{reply.reflection}</p>
-              </>
-            ) : null}
+              <h3 className="h3">Reflection</h3>
+              <p className="p">{reply.reflection}</p>
 
-            {reply.optional_prayer ? (
-              <>
-                <h3 className="sectionTitle">Optional Prayer</h3>
-                <p className="prayer">{reply.optional_prayer}</p>
-              </>
-            ) : null}
+              <h3 className="h3">Optional Prayer</h3>
+              <p className="p p--prayer">{reply.optional_prayer}</p>
+            </section>
           </section>
         ) : null}
-      </div>
+
+        <footer className="footer">
+          <span className="muted">
+            Note: Scripture is summarized for clarity and to avoid long quotes.
+          </span>
+        </footer>
+      </section>
     </main>
+  );
+}
+
+function SkeletonCard() {
+  return (
+    <section className="card card--glass reveal">
+      <div className="skeletonLine w60" />
+      <div className="skeletonLine w95" />
+      <div className="skeletonLine w90" />
+      <div className="skeletonLine w80" />
+      <div className="skeletonBlock" />
+    </section>
   );
 }
