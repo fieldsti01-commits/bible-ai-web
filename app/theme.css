@@ -10,13 +10,10 @@
 
 *{ box-sizing: border-box; }
 
-body{
-  margin: 0;
-  background: linear-gradient(180deg, #fbfaf7 0%, var(--bg) 70%);
-  color: var(--ink);
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+body {
+  background: linear-gradient(135deg, #3a1c71, #d76d77, #ffaf7b);
+  color: #ffffff;
 }
-
 /* matches <main className="container"> */
 .container{
   max-width: 720px;
