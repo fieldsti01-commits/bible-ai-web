@@ -5,13 +5,18 @@ import { useState } from "react";
 export default function Home() {
   const [input, setInput] = useState("");
   const [reply, setReply] = useState(null);
+  const [raw, setRaw] = useState(null);
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit() {
-    if (!input) return;
+    setError("");
+    setReply(null);
+    setRaw(null);
+
+    if (!input.trim()) return;
 
     setLoading(true);
-
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
@@ -19,13 +24,19 @@ export default function Home() {
         body: JSON.stringify({ message: input }),
       });
 
-      const data = await res.json();
-      setReply(data);
-    } catch (error) {
-      console.error(error);
-    }
+      const data = await res.json().catch(() => ({}));
+      setRaw(data);
 
-    setLoading(false);
+      if (!res.ok) {
+        setError(data?.error || `Request failed (${res.status})`);
+      } else {
+        setReply(data);
+      }
+    } catch (e) {
+      setError("Network error. Try refreshing the page.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -39,9 +50,16 @@ export default function Home() {
         onChange={(e) => setInput(e.target.value)}
       />
 
-      <button className="button" onClick={handleSubmit}>
+      <button className="button" onClick={handleSubmit} disabled={loading}>
         {loading ? "Seeking wisdom..." : "Seek Wisdom"}
       </button>
+
+      {error && (
+        <div className="card">
+          <h3 style={{ marginTop: 0 }}>Error</h3>
+          <p>{error}</p>
+        </div>
+      )}
 
       {reply && (
         <div className="card">
@@ -64,7 +82,7 @@ export default function Home() {
             </>
           )}
 
-          {reply.practical_steps && (
+          {Array.isArray(reply.practical_steps) && (
             <>
               <h3>Practical Steps</h3>
               <ul>
@@ -76,17 +94,27 @@ export default function Home() {
           )}
 
           {reply.reflection_question && (
-  <>
-    <h3>Reflection</h3>
-    <p>{reply.reflection_question}</p>
-  </>
-)}
+            <>
+              <h3>Reflection</h3>
+              <p>{reply.reflection_question}</p>
+            </>
+          )}
+
           {reply.optional_prayer && (
             <>
               <h3>Optional Prayer</h3>
               <p>{reply.optional_prayer}</p>
             </>
           )}
+        </div>
+      )}
+
+      {raw && (
+        <div className="card">
+          <h3 style={{ marginTop: 0 }}>Debug (Raw API Response)</h3>
+          <pre style={{ whiteSpace: "pre-wrap" }}>
+            {JSON.stringify(raw, null, 2)}
+          </pre>
         </div>
       )}
     </main>
