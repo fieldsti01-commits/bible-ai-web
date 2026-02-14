@@ -14,6 +14,7 @@ body {
   background: linear-gradient(135deg, #3a1c71, #d76d77, #ffaf7b);
   color: #ffffff;
 }
+
 /* matches <main className="container"> */
 .container{
   max-width: 720px;
