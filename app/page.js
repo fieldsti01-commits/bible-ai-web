@@ -75,6 +75,12 @@ export default function Home() {
             </>
           )}
 
+          {reply.reflection_question && (
+  <>
+    <h3>Reflection</h3>
+    <p>{reply.reflection_question}</p>
+  </>
+)}
           {reply.optional_prayer && (
             <>
               <h3>Optional Prayer</h3>
