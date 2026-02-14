@@ -21,73 +21,136 @@ export default function Home() {
   }
 
   return (
-    <main style={{ maxWidth: 760, margin: "40px auto", padding: 16 }}>
-      <h1>Bible AI</h1>
+  <main className="wrap">
+    <div className="topbar">
+      <div className="brand">
+        <h1>Bible AI</h1>
+        <p>Warm, Scripture-centered guidance for everyday life.</p>
+      </div>
+      <div className="badge">CEB • Neutral Christian</div>
+    </div>
 
-      <textarea
-        rows={5}
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        style={{ width: "100%", padding: 12 }}
-        placeholder="Ask a question or describe your situation..."
-      />
+    <div className="grid">
+      {/* Left: Input */}
+      <div className="card">
+        <div className="cardHeader">
+          <h2>Ask</h2>
+          <span className="small">Private link for friends</span>
+        </div>
+        <div className="cardBody">
+          <p className="label">Invite code</p>
+          <input
+            className="input"
+            value={inviteCode}
+            onChange={(e) => setInviteCode(e.target.value)}
+            placeholder="Enter invite code"
+          />
 
-      <button
-        onClick={send}
-        disabled={loading || !input.trim()}
-        style={{ marginTop: 12 }}
-      >
-        {loading ? "Thinking..." : "Send"}
-      </button>
+          <div className="section">
+            <p className="label">Your question</p>
+            <textarea
+              className="textarea"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Ask a question or describe your situation..."
+            />
+          </div>
 
-      <hr style={{ margin: "24px 0" }} />
+          <div className="actions">
+            <button
+              className="button primary"
+              onClick={send}
+              disabled={loading || !input.trim() || !inviteCode.trim()}
+            >
+              {loading ? "Thinking..." : "Send"}
+            </button>
 
-      {reply?.error && <p style={{ color: "crimson" }}>Error: {reply.error}</p>}
+            <button
+              className="button ghost"
+              onClick={() => {
+                setInput("");
+                setReply(null);
+              }}
+              type="button"
+            >
+              Clear
+            </button>
+          </div>
 
-      {reply?.summary && (
-        <>
-          <h3>Summary</h3>
-          <p>{reply.summary}</p>
-        </>
-      )}
+          {reply?.error && <div className="notice">⚠️ {reply.error}</div>}
+        </div>
+      </div>
 
-      {Array.isArray(reply?.scripture) && (
-        <>
-          <h3>Scripture</h3>
-          <ul>
-            {reply.scripture.map((s, i) => (
-              <li key={i}>
-                <strong>{s.reference}</strong>
-                <div>{s.why_it_applies}</div>
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
+      {/* Right: Response */}
+      <div className="card">
+        <div className="cardHeader">
+          <h2>Response</h2>
+          <span className="small">Scripture + steps</span>
+        </div>
 
-      {Array.isArray(reply?.practical_steps) && (
-  <>
-    <h3>Practical steps</h3>
-    <ol>
-      {reply.practical_steps.map((p, i) => (
-        <li key={i}>{p}</li>
-      ))}
-    </ol>
-  </> 
-)}
-      {reply?.optional_prayer && (
-        <>
-          <h3>Optional prayer</h3>
-          <p>{reply.optional_prayer}</p>
-        </>
-      )}
+        <div className="panel">
+          {!reply && (
+            <div className="block">
+              <div className="small">
+                Ask a question on the left. You’ll see a summary, relevant Scripture references,
+                practical steps, and an optional prayer.
+              </div>
+            </div>
+          )}
 
-      {reply?.raw && (
-        <>
-          <h3>Raw output</h3>
-          <pre style={{ whiteSpace: "pre-wrap" }}>{reply.raw}</pre>
-        </>
-      )}
-    </main>
-  );
-}
+          {reply?.summary && (
+            <div className="section">
+              <div className="sectionTitle">Guidance</div>
+              <div className="block">{reply.summary}</div>
+            </div>
+          )}
+
+          {Array.isArray(reply?.scripture) && (
+            <div className="section">
+              <div className="sectionTitle">Related Scripture</div>
+              <div className="block">
+                <div className="quote">
+                  {reply.scripture.map((s, i) => (
+                    <div key={i} style={{ marginBottom: i === reply.scripture.length - 1 ? 0 : 14 }}>
+                      <div className="ref">{s.reference}</div>
+                      <div className="small">{s.why_it_applies}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {Array.isArray(reply?.practical_steps) && (
+            <div className="section">
+              <div className="sectionTitle">Next steps</div>
+              <div className="block">
+                <ol className="list">
+                  {reply.practical_steps.map((p, i) => (
+                    <li key={i}>{p}</li>
+                  ))}
+                </ol>
+              </div>
+            </div>
+          )}
+
+          {reply?.optional_prayer && (
+            <div className="section">
+              <div className="sectionTitle">Optional prayer</div>
+              <div className="block">{reply.optional_prayer}</div>
+            </div>
+          )}
+
+          {reply?.raw && (
+            <div className="section">
+              <div className="sectionTitle">Raw output</div>
+              <div className="block">
+                <pre style={{ whiteSpace: "pre-wrap", margin: 0 }}>{reply.raw}</pre>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  </main>
+);
