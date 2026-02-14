@@ -77,7 +77,6 @@ IMPORTANT OUTPUT RULES:
       response_format: {
         type: "json_schema",
         json_schema: responseSchema,
-        strict: true,
       },
     });
 
