@@ -91,13 +91,13 @@ body {
 }
 
 /* matches <div className="scripture-block"> */
-.scripture-block{
-  margin-top: 12px;
-  padding: 12px;
-  border-radius: 14px;
-  border: 1px solid var(--border);
-  background: #fff;
-  border-left: 4px solid rgba(176,137,79,0.75); /* gold accent */
+.scripture-block {
+  margin-top: 16px;
+  padding: 18px;
+  border-radius: 16px;
+  background: #ffffff;
+  border-left: 5px solid #c6a75e;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
 }
 
 .scripture-block strong{
@@ -108,4 +108,19 @@ body {
 ul{
   margin: 8px 0 0;
   padding-left: 18px;
+}
+h3 {
+  color: #f5f5f5; /* soft white */
+  font-weight: 600;
+  margin-top: 24px;
+  margin-bottom: 12px;
+  letter-spacing: 0.5px;
+}
+
+p, li {
+  color: #e8e8e8; /* lighter body text */
+}
+
+strong {
+  color: #ffffff;
 }
