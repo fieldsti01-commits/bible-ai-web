@@ -1,91 +1,107 @@
-:root {
-  --bg: #f5f7fa;
+:root{
+  --bg: #f6f4ee;           /* warm church off-white */
   --card: #ffffff;
-  --accent: #3b82f6;
-  --text: #1f2937;
+  --ink: #1f2937;          /* slate text */
   --muted: #6b7280;
+  --border: #e7e2d7;
+  --accent: #2f6f5f;       /* church green */
+  --accent2: #b0894f;      /* soft gold */
 }
 
-body {
+*{ box-sizing: border-box; }
+
+body{
   margin: 0;
-  background: var(--bg);
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-  color: var(--text);
+  background: linear-gradient(180deg, #fbfaf7 0%, var(--bg) 70%);
+  color: var(--ink);
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
 }
 
-.container {
-  max-width: 600px;
-  margin: 60px auto;
-  padding: 20px;
+/* matches <main className="container"> */
+.container{
+  max-width: 720px;
+  margin: 56px auto;
+  padding: 0 16px 64px;
 }
 
-.title {
-  font-size: 28px;
-  margin-bottom: 20px;
+/* matches <h1 className="title"> */
+.title{
+  margin: 0 0 16px;
+  font-size: 30px;
+  letter-spacing: -0.02em;
 }
 
-.input {
+/* matches <textarea className="input"> */
+.input{
   width: 100%;
-  min-height: 120px;
+  min-height: 130px;
   padding: 14px;
-  border-radius: 10px;
-  border: 1px solid #ddd;
-  font-size: 16px;
-  margin-bottom: 15px;
-}
-
-.button {
-  width: 100%;
-  padding: 14px;
-  border-radius: 10px;
-  border: none;
-  background: var(--accent);
-  color: white;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.card {
-  margin-top: 30px;
-  background: var(--card);
-  padding: 20px;
   border-radius: 14px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--ink);
+  font-size: 16px;
+  outline: none;
+  box-shadow: 0 10px 25px rgba(17,24,39,0.05);
 }
 
-.scripture-block {
-  margin-top: 15px;
-  padding: 10px;
-  border-left: 4px solid var(--accent);
-  background: #f9fafb;
-}
-body {
-  background: linear-gradient(135deg, #0f172a, #1e293b);
-  color: #f1f5f9;
-  font-family: 'Georgia', serif;
-  margin: 0;
-  padding: 0;
+.input:focus{
+  border-color: rgba(47,111,95,0.55);
+  box-shadow: 0 0 0 4px rgba(47,111,95,0.12);
 }
 
-main {
-  max-width: 700px;
-  margin: 60px auto;
-  padding: 30px;
-  background: rgba(255,255,255,0.05);
-  border-radius: 16px;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.4);
-}
-
-button {
-  background: #d4af37;
-  color: black;
+/* matches <button className="button"> */
+.button{
+  width: 100%;
+  margin-top: 12px;
+  padding: 13px 14px;
   border: none;
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-weight: bold;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--accent) 0%, #3a8c78 100%);
+  color: white;
+  font-size: 16px;
+  font-weight: 800;
   cursor: pointer;
 }
 
-button:hover {
-  opacity: 0.9;
+.button:active{ transform: translateY(1px); }
+
+/* matches <div className="card"> */
+.card{
+  margin-top: 18px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: 0 18px 40px rgba(17,24,39,0.08);
+}
+
+/* headings inside the card */
+.card h2, .card h3{
+  margin: 14px 0 8px;
+}
+
+.card p{
+  margin: 8px 0;
+  color: var(--ink);
+}
+
+/* matches <div className="scripture-block"> */
+.scripture-block{
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: #fff;
+  border-left: 4px solid rgba(176,137,79,0.75); /* gold accent */
+}
+
+.scripture-block strong{
+  display: block;
+  margin-bottom: 6px;
+}
+
+ul{
+  margin: 8px 0 0;
+  padding-left: 18px;
 }
