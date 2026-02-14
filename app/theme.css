@@ -1,8 +1,18 @@
-/* Background */
-body {
+/* Reset */
+* {
+  box-sizing: border-box;
   margin: 0;
+  padding: 0;
+}
+
+/* Page background */
+html, body {
+  height: 100%;
+}
+
+body {
   font-family: system-ui, -apple-system, sans-serif;
-  background: linear-gradient(135deg, #0f2c2f, #1b4d4f);
+  background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
   color: #f5f5f5;
 }
 
@@ -13,40 +23,16 @@ main {
   padding: 20px;
 }
 
-/* Title */
-h1 {
-  font-size: 2rem;
-  font-weight: 600;
-  margin-bottom: 20px;
+/* Headings */
+h1, h2, h3 {
   color: #ffffff;
-}
-
-/* Section Titles */
-h3 {
-  color: #f0d88a;
-  font-weight: 600;
-  margin-top: 28px;
   margin-bottom: 10px;
 }
 
-/* Cards */
-.card, .scripture-block {
-  background: rgba(255, 255, 255, 0.08);
-  padding: 18px;
-  border-radius: 14px;
-  margin-bottom: 16px;
-  border: 1px solid rgba(255,255,255,0.15);
-}
-
-/* Paragraph text */
+/* Text blocks */
 p, li {
-  color: #f2f2f2;
+  color: #e6e6e6;
   line-height: 1.6;
-}
-
-/* Lists */
-ul {
-  padding-left: 20px;
 }
 
 /* Input box */
@@ -55,8 +41,8 @@ textarea {
   padding: 16px;
   border-radius: 12px;
   border: none;
-  font-size: 1rem;
-  margin-bottom: 16px;
+  font-size: 16px;
+  margin-bottom: 20px;
 }
 
 /* Button */
@@ -65,14 +51,23 @@ button {
   padding: 14px;
   border-radius: 12px;
   border: none;
-  background: #3a7d6d;
+  background: #3b7a57;
   color: white;
-  font-weight: 600;
-  font-size: 1rem;
+  font-size: 16px;
   cursor: pointer;
   transition: 0.2s ease;
 }
 
 button:hover {
-  background: #2f6659;
+  background: #2e5d44;
+}
+
+/* Response cards */
+.scripture-block,
+.card {
+  background: rgba(255, 255, 255, 0.08);
+  padding: 18px;
+  border-radius: 14px;
+  margin-bottom: 16px;
+  border-left: 4px solid #c9a227;
 }
