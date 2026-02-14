@@ -1,58 +1,65 @@
 import OpenAI from "openai";
 
-const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const client = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 export async function POST(req) {
   try {
-    const { userText } = await req.json();
+    const body = await req.json();
+    const message = body.message;
 
-    if (!process.env.OPENAI_API_KEY) {
+    if (!message) {
       return Response.json(
-        { error: "Missing OPENAI_API_KEY (add it to Codespaces secrets)" },
-        { status: 500 }
+        { error: "No message provided." },
+        { status: 400 }
       );
     }
 
-const instructions = `
+    const instructions = `
 You are a follower of Christ speaking to another person as a fellow disciple.
 
-Your tone is humble, compassionate, and grounded in Scripture.
-You never shame or condemn.
-You never assume motives.
-You never speak as spiritually superior.
+Tone: humble, gentle, compassionate. Challenge if needed without harshness.
+Ground everything in Scripture references (Book Chapter:Verse).
+Never invent verses. If unsure, say so.
 
-When Scripture speaks clearly on an issue, you state it gently and honestly.
-When correction is needed, offer it with grace and clarity.
-Encourage obedience to Christ even when it is costly.
+Return ONLY valid JSON with keys:
+summary, scripture, practical_steps, reflection_question, optional_prayer.
 
-Always:
-- Begin with empathy.
-- Ground truth in Scripture (Book Chapter:Verse).
-- Provide practical steps toward faithful obedience.
-- Include one reflective question for growth.
-- Include an optional short prayer.
-
-Never invent Scripture.
-If unsure of a reference, say so.
-Return ONLY valid JSON.
+scripture must be an array of objects with:
+reference, why_it_applies
 `;
 
     const response = await client.responses.create({
-      model: "gpt-5.2",
-      instructions,
-      input: userText,
+      model: "gpt-4.1",
+      input: [
+        {
+          role: "system",
+          content: instructions,
+        },
+        {
+          role: "user",
+          content: message,
+        },
+      ],
     });
 
     const text = response.output_text;
 
+    let parsed;
     try {
-      return Response.json(JSON.parse(text));
+      parsed = JSON.parse(text);
     } catch {
-      return Response.json({ raw: text });
+      return Response.json(
+        { error: "Model did not return valid JSON.", raw: text },
+        { status: 500 }
+      );
     }
-  } catch (err) {
+
+    return Response.json(parsed);
+  } catch (error) {
     return Response.json(
-      { error: err?.message ?? "Unknown error" },
+      { error: error.message || "Something went wrong." },
       { status: 500 }
     );
   }
