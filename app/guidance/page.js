@@ -8,38 +8,49 @@ export default function GuidancePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleSubmit = async () => {
-    if (!question.trim()) return;
+  async function handleSubmit() {
+  const q = question.trim();
+  if (!q) {
+    setErr("Please enter a question.");
+    return;
+  }
 
-    setLoading(true);
-    setError("");
-    setOut("");
+  setErr("");
+  setOut("");
+  setLoading(true);
 
-    try {
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          prompt: question,
-          mode: "guidance",
-        }),
-      });
+  try {
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        // send BOTH so route.js works no matter which it expects
+        prompt: q,
+        input: q,
+        mode: "guidance",
+        tone: "gentle-but-challenging",
+      }),
+    });
 
-      const data = await res.text();
+    const text = await res.text();
 
-      if (!res.ok) {
-        throw new Error(data.error || "Something went wrong.");
-      }
-
-      setOut(data.output || "");
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+    if (!res.ok) {
+      setErr(text || "Request failed.");
+      return;
     }
-  };
+
+    if (!text || !text.trim()) {
+      setErr("No response returned. Check route.js prompt parsing.");
+      return;
+    }
+
+    setOut(text);
+  } catch (e) {
+    setErr(e?.message || "Something went wrong.");
+  } finally {
+    setLoading(false);
+  }
+}
 
   return (
     <main className="page">
