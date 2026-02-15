@@ -30,11 +30,11 @@ export default function PrayerPage() {
         }),
       });
 
-      const text = await res.text();
+      const data = await res.text();
 
       if (!res.ok) throw new Error(text);
 
-      setOut(text);
+      setOut(data);
     } catch (e) {
       setErr("Something went wrong.");
     } finally {
