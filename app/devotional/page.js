@@ -1,7 +1,6 @@
-import TabBar from "../components/TabBar";
-
 "use client";
 
+import TabBar from "../components/TabBar";
 import Link from "next/link";
 import { useState } from "react";
 
