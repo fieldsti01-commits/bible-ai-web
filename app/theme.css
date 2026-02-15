@@ -216,3 +216,61 @@ a:hover { text-decoration: none; }
   0%{ transform: translateX(-120%); }
   100%{ transform: translateX(120%); }
 }
+/* Bottom Tab Bar */
+.tabbar {
+  position: fixed;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  width: min(720px, calc(100% - 24px));
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  padding: 10px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 18px 55px rgba(0, 0, 0, 0.35);
+  z-index: 1000;
+}
+
+.tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 10px 6px;
+  border-radius: 14px;
+  color: rgba(255,255,255,0.75);
+  transition: transform 160ms ease, background 160ms ease, color 160ms ease;
+}
+
+.tab:hover {
+  transform: translateY(-1px);
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.9);
+}
+
+.tabActive {
+  background: rgba(255,255,255,0.14);
+  color: rgba(255,255,255,0.95);
+  border: 1px solid rgba(255,255,255,0.18);
+}
+
+.tabIcon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.tabLabel {
+  font-size: 12px;
+  line-height: 1;
+}
+
+/* Add bottom padding so content doesn't hide behind tabbar */
+.page {
+  padding-bottom: 110px;
+}

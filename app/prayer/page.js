@@ -1,3 +1,5 @@
+import TabBar from "../components/TabBar";
+
 "use client";
 
 import Link from "next/link";
@@ -109,3 +111,4 @@ function LoadingCard() {
     </section>
   );
 }
+<TabBar />

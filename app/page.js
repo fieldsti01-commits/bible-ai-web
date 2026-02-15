@@ -1,3 +1,5 @@
+import TabBar from "./components/TabBar";
+
 import Link from "next/link";
 
 export default function Home() {
@@ -52,6 +54,7 @@ export default function Home() {
           </Link>
         </div>
       </div>
+      <TabBar />
     </main>
   );
 }
