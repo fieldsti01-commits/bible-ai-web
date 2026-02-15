@@ -3,8 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 
-export default function PrayerPage() {
-  const [topic, setTopic] = useState("family");
+ export default function PrayerPage() {
   const [loading, setLoading] = useState(false);
   const [out, setOut] = useState("");
   const [err, setErr] = useState("");
