@@ -3,28 +3,29 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-export default function TabBar() {
+export default function BottomTabs() {
   const pathname = usePathname();
 
   const tabs = [
     { href: "/", label: "Home", icon: "🏠" },
-    { href: "/guidance", label: "Guidance", icon: "🕊️" },
+    { href: "/guidance", label: "Guidance", icon: "🧭" },
     { href: "/devotional", label: "Devotional", icon: "📖" },
     { href: "/prayer", label: "Prayer", icon: "🙏" },
   ];
 
   return (
-    <nav className="tabbar" aria-label="Bottom navigation">
-      {tabs.map((t) => {
-        const active = pathname === t.href;
+    <nav className="bottomTab">
+      {tabs.map((tab) => {
+        const active = pathname === tab.href;
+
         return (
           <Link
-            key={t.href}
-            href={t.href}
-            className={`tab ${active ? "tabActive" : ""}`}
+            key={tab.href}
+            href={tab.href}
+            className={`tabItem ${active ? "active" : ""}`}
           >
-            <div className="tabIcon">{t.icon}</div>
-            <div className="tabLabel">{t.label}</div>
+            <span className="tabIcon">{tab.icon}</span>
+            <span className="tabLabel">{tab.label}</span>
           </Link>
         );
       })}
