@@ -101,7 +101,7 @@ export default function DevotionalPage() {
         )}
 
         {out && !loading && (
-          <section className="glass card" style={{ marginTop: 16 }}>
+          <section className="glass card fadeIn" style={{ marginTop: 16 }}>
             <div className="sectionTitle">Your Devotional</div>
             <p className="paragraph" style={{ whiteSpace: "pre-wrap" }}>
               {out}

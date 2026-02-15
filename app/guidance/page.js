@@ -105,7 +105,7 @@ export default function GuidancePage() {
         )}
 
         {out && !loading && (
-          <section className="glass card" style={{ marginTop: 16 }}>
+          <section className="glass card fadeIn" style={{ marginTop: 16 }}>
             <div className="sectionTitle">Your Guidance</div>
             <p className="paragraph" style={{ whiteSpace: "pre-wrap" }}>
               {out}
