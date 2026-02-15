@@ -1,35 +1,45 @@
 "use client";
 
-import TabBar from "../components/TabBar";
 import Link from "next/link";
 import { useState } from "react";
 
 export default function GuidancePage() {
-  const [prompt, setPrompt] = useState("");
-  const [reply, setReply] = useState(null);
-  const [error, setError] = useState("");
+  const [question, setQuestion] = useState(
+    "Why do I struggle to trust God even when I say I believe?"
+  );
   const [loading, setLoading] = useState(false);
+  const [out, setOut] = useState("");
+  const [err, setErr] = useState("");
 
-  async function submit(e) {
-    e.preventDefault();
-    setError("");
-    setReply(null);
+  async function seekWisdom() {
+    setErr("");
+    setOut("");
 
-    const p = prompt.trim();
-    if (!p) return setError("Type a question first.");
+    const prompt = question.trim();
+    if (!prompt) {
+      setErr("Please enter a question.");
+      return;
+    }
 
     setLoading(true);
+
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: p }),
+        body: JSON.stringify({
+          prompt, // ✅ IMPORTANT
+          mode: "guidance",
+          tone: "gentle",
+        }),
       });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) setError(data?.error || "Something went wrong.");
-      else setReply(data);
-    } catch {
-      setError("Network error. Try again.");
+
+      const text = await res.text(); // ✅ IMPORTANT (API returns plain text)
+      if (!res.ok) throw new Error(text || "Request failed.");
+
+      setOut(text);
+    } catch (e) {
+      setErr(e?.message || "Something went wrong.");
     } finally {
       setLoading(false);
     }
@@ -37,88 +47,72 @@ export default function GuidancePage() {
 
   return (
     <main className="page">
-      <section className="shell">
-        <div className="topNav">
-          <Link className="backLink" href="/">← Back</Link>
-          <div className="crumb">Guidance</div>
+      <div className="shell">
+        <div style={{ marginBottom: 12 }}>
+          <Link href="/" className="backLink">
+            ← Back
+          </Link>
         </div>
 
-        <form className="card card--glass" onSubmit={submit}>
+        <header className="hero">
+          <h1 className="title">Guidance</h1>
+          <p className="subtitle">
+            Disciple-like counsel with Scripture, steps, reflection, and prayer.
+          </p>
+        </header>
+
+        <section className="glass card">
           <label className="label">Your question</label>
+
           <textarea
-            className="input"
-            rows={4}
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            placeholder="Ask for biblical guidance..."
+            className="textarea"
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            placeholder="Ask honestly and specifically…"
+            rows={3}
           />
-          <button className="btn" disabled={loading}>
-            {loading ? (
-              <span className="btn-loading">
-                <span className="spinner" /> Seeking wisdom…
-              </span>
-            ) : (
-              "Seek Wisdom"
-            )}
-          </button>
-        </form>
 
-        {error ? (
-          <section className="card card--glass card--error reveal">
-            <h2 className="h2">Error</h2>
-            <p className="p">{error}</p>
-          </section>
-        ) : null}
+          <div className="row" style={{ marginTop: 12 }}>
+            <button
+              className="button"
+              onClick={seekWisdom}
+              disabled={loading}
+              type="button"
+            >
+              {loading ? "Seeking..." : "Seek Wisdom"}
+            </button>
 
-        {loading ? <LoadingCard /> : null}
-
-        {reply ? (
-          <section className="card card--glass reveal">
-            <h2 className="h2">Guidance</h2>
-            <p className="p">{reply.guidance}</p>
-
-            <h3 className="h3">Scripture</h3>
-            <div className="scriptureGrid">
-              {(reply.scripture || []).map((s, i) => (
-                <article className="scriptureCard" key={i}>
-                  <div className="scriptureRef">{s.reference}</div>
-                  {s.short_excerpt?.trim() ? (
-                    <div className="scriptureExcerpt">“{s.short_excerpt.trim()}”</div>
-                  ) : null}
-                  <div className="scriptureSummary">{s.summary}</div>
-                  <div className="scriptureApply">
-                    <strong>Disciple step:</strong> {s.disciple_application}
-                  </div>
-                </article>
-              ))}
+            <div className="hint" style={{ marginLeft: 12 }}>
+              Tip: be honest + specific.
             </div>
+          </div>
+        </section>
 
-            <h3 className="h3">Practical Steps</h3>
-            <ol className="list">
-              {(reply.practical_steps || []).map((st, i) => <li key={i}>{st}</li>)}
-            </ol>
-
-            <h3 className="h3">Reflection</h3>
-            <p className="p">{reply.reflection}</p>
-
-            <h3 className="h3">Optional Prayer</h3>
-            <p className="p p--prayer">{reply.optional_prayer}</p>
+        {err && (
+          <section className="glass card errorCard" style={{ marginTop: 16 }}>
+            <div className="sectionTitle">Error</div>
+            <p className="paragraph">{err}</p>
           </section>
-        ) : null}
-      </section>
+        )}
+
+        {loading && (
+          <section className="glass card" style={{ marginTop: 16 }}>
+            <div className="sectionTitle">Preparing guidance…</div>
+            <div className="skeleton" />
+            <div className="skeleton" />
+            <div className="skeleton short" />
+          </section>
+        )}
+
+        {out && !loading && (
+          <section className="glass card" style={{ marginTop: 16 }}>
+            <div className="sectionTitle">Your Guidance</div>
+            <p className="paragraph" style={{ whiteSpace: "pre-wrap" }}>
+              {out}
+            </p>
+          </section>
+        )}
+      </div>
     </main>
   );
 }
-
-function LoadingCard() {
-  return (
-    <section className="card card--glass reveal">
-      <div className="skeletonLine w60" />
-      <div className="skeletonLine w95" />
-      <div className="skeletonLine w90" />
-      <div className="skeletonLine w80" />
-      <div className="skeletonBlock" />
-    </section>
-  );
-}
-<TabBar />
