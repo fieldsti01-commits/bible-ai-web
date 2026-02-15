@@ -15,20 +15,18 @@ export default function BottomTabs() {
 
   return (
     <nav className="bottomTab">
-      {tabs.map((tab) => {
-        const active = pathname === tab.href;
-
-        return (
-          <Link
-            key={tab.href}
-            href={tab.href}
-            className={`tabItem ${active ? "active" : ""}`}
-          >
-            <span className="tabIcon">{tab.icon}</span>
-            <span className="tabLabel">{tab.label}</span>
-          </Link>
-        );
-      })}
+      {tabs.map((tab) => (
+        <Link
+          key={tab.href}
+          href={tab.href}
+          className={`tabItem ${
+            pathname === tab.href ? "active" : ""
+          }`}
+        >
+          <div className="tabIcon">{tab.icon}</div>
+          {tab.label}
+        </Link>
+      ))}
     </nav>
   );
 }
