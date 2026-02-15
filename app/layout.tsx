@@ -1,31 +1,22 @@
 import "./theme.css";
+import BottomTabs from "./components/TabBar";
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
-  title: "Bible AI",
-  description: "Biblical guidance with Scripture references.",
+  title: "Worship Hub",
+  description: "Bible AI worship tools",
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        {children}
+      <body>
+        <div className="appFrame">{children}</div>
+        <BottomTabs />
       </body>
     </html>
   );

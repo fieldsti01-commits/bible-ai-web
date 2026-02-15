@@ -1,65 +1,114 @@
-// app/page.js
-import Link from "next/link";
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+
+function todayKey() {
+  // YYYY-MM-DD local time
+  const d = new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
 
 export default function Home() {
+  const key = useMemo(() => `daily_prayer_${todayKey()}`, []);
+  const [loading, setLoading] = useState(false);
+  const [prayer, setPrayer] = useState("");
+  const [err, setErr] = useState("");
+
+  async function loadDailyPrayer() {
+    setErr("");
+    setLoading(true);
+
+    try {
+      // Cache check
+      const cached = typeof window !== "undefined" ? localStorage.getItem(key) : null;
+      if (cached) {
+        setPrayer(cached);
+        setLoading(false);
+        return;
+      }
+
+      const prompt = `
+Write ONE cohesive daily prayer that someone can pray today.
+Requirements:
+- Warm, disciple-like tone (gentle, not cheesy).
+- 180–260 words.
+- No headings, no bullet points, no explanations.
+- End with "Amen."
+`.trim();
+
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt,
+          mode: "prayer",
+          tone: "gentle",
+        }),
+      });
+
+      const text = await res.text();
+      if (!res.ok) throw new Error(text || "Request failed.");
+
+      setPrayer(text);
+      localStorage.setItem(key, text);
+    } catch (e) {
+      setErr(e?.message || "Something went wrong.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadDailyPrayer();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <main className="page">
       <div className="shell">
         <header className="hero">
           <h1 className="title">Worship Hub</h1>
           <p className="subtitle">
-            A simple place to seek biblical guidance, pray honestly, and stay rooted daily.
+            Daily prayer + tools for Guidance, Devotional, and Prayer.
           </p>
         </header>
 
-        {/* Daily focus card */}
-        <section className="glass card fadeIn" style={{ marginBottom: 14 }}>
-          <div className="sectionTitle">Today</div>
-          <p className="paragraph">
-            Take 60 seconds: ask, listen, and respond. One small step of obedience is powerful.
-          </p>
-          <div style={{ display: "flex", gap: 10, marginTop: 12, flexWrap: "wrap" }}>
-            <Link className="button" href="/guidance" style={{ textDecoration: "none" }}>
-              Seek Wisdom
-            </Link>
-            <Link className="button" href="/prayer" style={{ textDecoration: "none" }}>
-              Build Prayer
-            </Link>
+        <section className="glass card fadeIn">
+          <div className="sectionTitle">Daily Prayer</div>
+
+          {loading && (
+            <>
+              <div className="skeleton" />
+              <div className="skeleton" />
+              <div className="skeleton short" />
+            </>
+          )}
+
+          {err && !loading && (
+            <p className="paragraph" style={{ opacity: 0.9 }}>
+              Couldn’t load today’s prayer. Tap refresh.
+            </p>
+          )}
+
+          {!loading && !err && prayer && (
+            <p className="paragraph" style={{ whiteSpace: "pre-wrap" }}>
+              {prayer}
+            </p>
+          )}
+
+          <div style={{ display: "flex", gap: 10, marginTop: 14, flexWrap: "wrap" }}>
+            <button className="button" type="button" onClick={loadDailyPrayer} disabled={loading}>
+              {loading ? "Refreshing…" : "Refresh"}
+            </button>
           </div>
         </section>
 
-        {/* Main tools */}
-        <section className="grid3">
-          <Link href="/guidance" className="toolCard">
-            <div className="toolTop">
-              <div className="toolTitle">Guidance</div>
-              <div className="toolTag">Disciple-like counsel</div>
-            </div>
-            <div className="toolDesc">
-              Scripture-rooted guidance with practical steps and reflection.
-            </div>
-          </Link>
-
-          <Link href="/devotional" className="toolCard">
-            <div className="toolTop">
-              <div className="toolTitle">Daily Devotional</div>
-              <div className="toolTag">Stay rooted</div>
-            </div>
-            <div className="toolDesc">
-              A short devotional with Scripture and a prayer.
-            </div>
-          </Link>
-
-          <Link href="/prayer" className="toolCard">
-            <div className="toolTop">
-              <div className="toolTitle">Prayer Builder</div>
-              <div className="toolTag">Pray now</div>
-            </div>
-            <div className="toolDesc">
-              A simple prayer you can pray out loud right away.
-            </div>
-          </Link>
-        </section>
+        <div className="hint" style={{ marginTop: 14 }}>
+          Use the tabs below to switch between tools.
+        </div>
       </div>
     </main>
   );

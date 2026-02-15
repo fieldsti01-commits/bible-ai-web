@@ -396,3 +396,53 @@ body {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
+/* Make space for tab bar */
+.appFrame {
+  padding-bottom: 92px;
+}
+
+/* Tab bar */
+.tabbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 12px 14px 18px;
+  background: linear-gradient(180deg, rgba(0,0,0,0), rgba(0,0,0,.55));
+  backdrop-filter: blur(10px);
+}
+
+.tabbarInner {
+  max-width: 720px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 18px;
+  padding: 10px;
+}
+
+.tab {
+  text-decoration: none;
+  text-align: center;
+  color: rgba(255,255,255,0.70);
+  font-weight: 650;
+  font-size: 13px;
+  padding: 10px 8px;
+  border-radius: 14px;
+  transition: background .15s ease, color .15s ease, transform .15s ease;
+}
+
+.tab:hover {
+  transform: translateY(-1px);
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.88);
+}
+
+.tab.active {
+  background: rgba(29,185,84,0.18);
+  border: 1px solid rgba(29,185,84,0.35);
+  color: rgba(255,255,255,0.95);
+}
