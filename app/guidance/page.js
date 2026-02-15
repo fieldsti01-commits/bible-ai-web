@@ -5,7 +5,7 @@ import { useState } from "react";
 
 export default function GuidancePage() {
   const [question, setQuestion] = useState(
-    "Why do I struggle to trust God even when I say I believe?"
+    ""
   );
   const [loading, setLoading] = useState(false);
   const [out, setOut] = useState("");

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 export default function DevotionalPage() {
-  const [theme, setTheme] = useState("peace");
+  const [theme, setTheme] = useState("");
   const [loading, setLoading] = useState(false);
   const [out, setOut] = useState("");
   const [err, setErr] = useState("");
