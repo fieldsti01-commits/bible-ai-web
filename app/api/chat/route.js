@@ -1,101 +1,95 @@
 // app/api/chat/route.js
-import OpenAI from "openai";
-
-export const runtime = "nodejs";
-
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-const responseSchema = {
-  name: "bible_ai_response",
-  schema: {
-    type: "object",
-    additionalProperties: false,
-    properties: {
-      guidance: { type: "string" },
-      scripture: {
-        type: "array",
-        minItems: 5,
-        maxItems: 10,
-        items: {
-          type: "object",
-          additionalProperties: false,
-          properties: {
-            reference: { type: "string" },
-            summary: { type: "string" },
-            disciple_application: { type: "string" },
-            short_excerpt: {
-              type: "string",
-              description:
-                "Optional: a very short excerpt (keep it brief). If unsure, leave empty string.",
-            },
-          },
-          required: ["reference", "summary", "disciple_application", "short_excerpt"],
-        },
-      },
-      practical_steps: {
-        type: "array",
-        minItems: 3,
-        maxItems: 7,
-        items: { type: "string" },
-      },
-      reflection: { type: "string" },
-      optional_prayer: { type: "string" },
-    },
-    required: ["guidance", "scripture", "practical_steps", "reflection", "optional_prayer"],
-  },
-};
 
 export async function POST(req) {
   try {
     const body = await req.json().catch(() => ({}));
-    const prompt = (body?.prompt || "").trim();
+
+    // accept either "prompt" or "input"
+    const prompt = String(body.prompt ?? body.input ?? "").trim();
+    const mode = String(body.mode ?? "guidance").trim(); // "guidance" | "devotional" | "prayer"
+    const tone = String(body.tone ?? "gentle").trim();
 
     if (!prompt) {
-      return Response.json({ error: "No prompt provided." }, { status: 400 });
+      return new Response("No prompt provided.", { status: 400 });
     }
 
+    // --- SYSTEM INSTRUCTIONS PER MODE ---
     const system = `
-You are "Bible AI" — a gentle but appropriately challenging disciple-maker.
-Tone: warm, humble, direct, hope-filled. Not harsh or shaming.
-Goal: deep discipleship. Encourage repentance, faith, wisdom, community, and next steps.
+You are "Bible AI" — gentle, pastoral, disciple-like, and grounded in Scripture.
+Tone: ${tone}
 
-IMPORTANT OUTPUT RULES:
-- Return ONLY valid JSON that matches the provided schema.
-- Provide 5–10 scripture items (reference + brief summary + disciple_application).
-- DO NOT paste long Scripture passages (summaries are preferred).
-- Reflection must appear ONLY in the "reflection" field (do NOT repeat inside the prayer).
-- Optional prayer must NOT include the reflection question.
-- Assume the user wants CEB-style plain language, but summarize (don’t quote long text).
-`;
+GENERAL RULES:
+- Do NOT output raw JSON.
+- Do NOT include the word "Debug".
+- Keep it clear, warm, and usable.
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: system.trim() },
-        { role: "user", content: prompt },
-      ],
-      response_format: {
-        type: "json_schema",
-        json_schema: responseSchema,
-      },
-    });
+MODE BEHAVIOR:
 
-    const content = completion?.choices?.[0]?.message?.content || "";
-    let parsed;
-    try {
-      parsed = JSON.parse(content);
-    } catch {
-      return Response.json(
-        { error: "Model returned non-JSON output.", raw: content },
+If mode is "guidance":
+- Provide: Guidance, Scripture (5–7 references), Practical Steps (5–7 bullets), Reflection (1 question), Optional Prayer (short).
+- Scripture should be summarized in 1–2 sentences each (avoid long quotes).
+- If you include a short quote, keep it very short.
+
+If mode is "devotional":
+- Provide: Title (short), Theme (1 sentence), Scripture (5–7 references with 1–2 sentence summaries), Encouragement (short paragraph), Prayer (short).
+- Avoid long quotations.
+
+If mode is "prayer":
+- Write ONE cohesive prayer someone can pray aloud.
+- No section headers. No bullet points. No explanation.
+- 200–350 words.
+- Include 1–2 very short Scripture phrases at most (optional), otherwise just reference ideas.
+- End with "Amen.".
+`.trim();
+
+    // --- CALL OPENAI ---
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      return new Response(
+        "Missing credentials. Set OPENAI_API_KEY in environment variables.",
         { status: 500 }
       );
     }
 
-    return Response.json(parsed);
-  } catch (err) {
-    return Response.json(
-      { error: err?.message || "Unknown server error." },
-      { status: 500 }
-    );
+    const userMessage = `
+Mode: ${mode}
+User request: ${prompt}
+`.trim();
+
+    const res = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        temperature: 0.7,
+        messages: [
+          { role: "system", content: system },
+          { role: "user", content: userMessage },
+        ],
+      }),
+    });
+
+    if (!res.ok) {
+      const errText = await res.text().catch(() => "");
+      return new Response(errText || "Request failed.", { status: res.status });
+    }
+
+    const data = await res.json();
+    const text = data?.choices?.[0]?.message?.content?.trim() || "";
+
+    if (!text) {
+      return new Response("Empty response from model.", { status: 500 });
+    }
+
+    // IMPORTANT: Return plain text (not JSON)
+    return new Response(text, {
+      status: 200,
+      headers: { "Content-Type": "text/plain; charset=utf-8" },
+    });
+  } catch (e) {
+    return new Response(e?.message || "Something went wrong.", { status: 500 });
   }
 }
