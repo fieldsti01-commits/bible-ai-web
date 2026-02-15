@@ -1,358 +1,115 @@
-/* app/theme.css */
+/* ===== Base Layout ===== */
 
-:root{
-  --bg1: #071a1c;
-  --bg2: #0b2a2d;
-  --bg3: #0e3a33;
-
-  --card: rgba(255,255,255,0.10);
-  --card2: rgba(255,255,255,0.08);
-  --stroke: rgba(255,255,255,0.14);
-
-  --text: rgba(255,255,255,0.92);
-  --muted: rgba(255,255,255,0.70);
-  --faint: rgba(255,255,255,0.55);
-
-  --accent: #2fbf9b;
-  --accent2: #1f7a66;
-
-  --warn: rgba(255, 120, 120, 0.18);
-  --warnStroke: rgba(255, 120, 120, 0.30);
-
-  --shadow: 0 18px 55px rgba(0,0,0,0.40);
-  --radius: 18px;
-}
-
-*{ box-sizing: border-box; }
-html, body { height: 100%; }
-body{
-  margin:0;
-  color: var(--text);
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-}
-
-.app{
+body {
+  margin: 0;
+  padding: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+  background: linear-gradient(135deg, #f4f6f8, #e8ecef);
+  color: #1f2937;
   min-height: 100vh;
-  position: relative;
-  padding: 48px 16px 72px;
 }
 
-.bg{
-  position: fixed;
-  inset: 0;
-  background:
-    radial-gradient(1200px 700px at 70% 15%, rgba(47,191,155,0.22), transparent 55%),
-    radial-gradient(900px 600px at 15% 25%, rgba(255,255,255,0.08), transparent 55%),
-    linear-gradient(135deg, var(--bg1), var(--bg2) 45%, var(--bg3));
-  filter: saturate(1.05);
-  z-index: -1;
+/* Center container */
+.container {
+  max-width: 800px;
+  margin: 80px auto;
+  padding: 20px;
 }
 
-.shell{
-  max-width: 980px;
-  margin: 0 auto;
-}
+/* ===== Input Section ===== */
 
-.header{
-  margin-bottom: 18px;
-}
-
-.title{
-  margin: 0 0 8px;
-  font-size: clamp(32px, 4vw, 44px);
-  letter-spacing: -0.02em;
-}
-
-.subtitle{
-  margin: 0;
-  color: var(--muted);
-  line-height: 1.45;
-}
-
-.card{
-  border-radius: var(--radius);
-  border: 1px solid var(--stroke);
-  box-shadow: var(--shadow);
-  padding: 18px;
-  margin-top: 14px;
-}
-
-.card--glass{
-  background: linear-gradient(180deg, var(--card), var(--card2));
-  backdrop-filter: blur(10px);
-}
-
-.card--error{
-  background: linear-gradient(180deg, var(--warn), rgba(0,0,0,0.10));
-  border-color: var(--warnStroke);
-}
-
-.label{
-  display:block;
-  font-size: 13px;
-  color: var(--muted);
-  margin-bottom: 8px;
-}
-
-.input{
+textarea {
   width: 100%;
-  padding: 14px 14px;
-  border-radius: 14px;
-  border: 1px solid rgba(255,255,255,0.16);
-  background: rgba(0,0,0,0.18);
-  color: var(--text);
-  outline: none;
-  resize: vertical;
-  line-height: 1.4;
-}
-
-.input:focus{
-  border-color: rgba(47,191,155,0.55);
-  box-shadow: 0 0 0 4px rgba(47,191,155,0.14);
-}
-
-.actions{
-  display:flex;
-  align-items:center;
-  gap: 12px;
-  margin-top: 12px;
-  flex-wrap: wrap;
-}
-
-.btn{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  gap: 10px;
-  padding: 12px 16px;
-  border-radius: 999px;
-  border: 1px solid rgba(255,255,255,0.12);
-  background: linear-gradient(90deg, rgba(47,191,155,0.75), rgba(31,122,102,0.85));
-  color: rgba(255,255,255,0.95);
-  font-weight: 650;
-  cursor: pointer;
-  min-width: 220px;
-  transition: transform 160ms ease, filter 160ms ease;
-}
-
-.btn:hover{ transform: translateY(-1px); filter: brightness(1.05); }
-.btn:disabled{
-  opacity: 0.65;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.hint{
-  color: var(--faint);
-  font-size: 13px;
-}
-
-.stack{ margin-top: 10px; }
-
-.h2{
-  margin: 0 0 8px;
-  font-size: 22px;
-  letter-spacing: -0.01em;
-}
-
-.h3{
-  margin: 16px 0 10px;
-  font-size: 16px;
-  color: rgba(255,255,255,0.92); /* brighter so headings aren't “too dark” */
-}
-
-.p{
-  margin: 0;
-  color: rgba(255,255,255,0.86);
-  line-height: 1.55;
-}
-
-.p + .p{ margin-top: 10px; }
-
-.p--prayer{
-  font-style: italic;
-  color: rgba(255,255,255,0.84);
-}
-
-.list{
-  margin: 0;
-  padding-left: 18px;
-  color: rgba(255,255,255,0.86);
-  line-height: 1.6;
-}
-
-.scriptureGrid{
-  display:grid;
-  grid-template-columns: repeat(12, 1fr);
-  gap: 12px;
-}
-
-.scriptureCard{
-  grid-column: span 12;
+  padding: 16px;
   border-radius: 16px;
-  border: 1px solid rgba(255,255,255,0.14);
-  background: rgba(0,0,0,0.18);
-  padding: 14px;
-  position: relative;
-  overflow: hidden;
+  border: 1px solid #d1d5db;
+  font-size: 16px;
+  resize: none;
+  outline: none;
+  background: #ffffff;
+  color: #1f2937;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
 }
 
-@media (min-width: 860px){
-  .scriptureCard{ grid-column: span 6; }
+textarea:focus {
+  border-color: #4f9d69;
+  box-shadow: 0 0 0 3px rgba(79,157,105,0.2);
 }
 
-.scriptureCard::before{
-  content:"";
-  position:absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 4px;
-  background: linear-gradient(180deg, rgba(255,210,77,0.95), rgba(255,210,77,0.35));
-  opacity: 0.9;
+/* ===== Button ===== */
+
+button {
+  margin-top: 16px;
+  padding: 14px 20px;
+  border-radius: 16px;
+  border: none;
+  font-size: 16px;
+  font-weight: 600;
+  background: linear-gradient(135deg, #4f9d69, #3c7f55);
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.scriptureRef{
-  font-weight: 800;
-  color: rgba(255,255,255,0.95);
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+/* ===== Card Styling ===== */
+
+.card {
+  margin-top: 30px;
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(12px);
+  border-radius: 20px;
+  padding: 28px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+  color: #1f2937;
+  animation: fadeIn 0.5s ease;
+}
+
+/* Section headers like Guidance, Scripture, Reflection */
+.section-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin-top: 20px;
+  margin-bottom: 8px;
+  color: #0f172a;
+}
+
+/* Scripture reference (gold) */
+.scripture-ref {
+  color: #b68c2f;
+  font-weight: 700;
+  margin-top: 10px;
+}
+
+/* Scripture quote (gold italic) */
+.scripture-quote {
+  color: #b68c2f;
+  font-style: italic;
+  margin-bottom: 10px;
+}
+
+/* List styling */
+ul, ol {
+  padding-left: 20px;
+}
+
+li {
   margin-bottom: 6px;
 }
 
-.scriptureExcerpt{
-  color: rgba(255,210,77,0.95);
-  font-style: italic;
-  margin-bottom: 8px;
-}
+/* ===== Smooth Fade Animation ===== */
 
-.scriptureSummary{
-  color: rgba(255,255,255,0.84);
-  margin-bottom: 10px;
-  line-height: 1.5;
-}
-
-.scriptureApply{
-  color: rgba(255,255,255,0.86);
-  line-height: 1.5;
-}
-
-.footer{
-  margin-top: 18px;
-  color: var(--faint);
-  font-size: 12px;
-}
-
-.muted{ color: var(--faint); }
-
-.reveal{
-  animation: fadeUp 240ms ease-out both;
-}
-
-@keyframes fadeUp{
-  from{ opacity: 0; transform: translateY(6px); }
-  to{ opacity: 1; transform: translateY(0); }
-}
-
-.spinner{
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  border: 2px solid rgba(255,255,255,0.35);
-  border-top-color: rgba(255,255,255,0.95);
-  animation: spin 700ms linear infinite;
-}
-
-@keyframes spin{
-  to{ transform: rotate(360deg); }
-}
-
-/* Skeletons */
-.skeletonLine{
-  height: 12px;
-  border-radius: 999px;
-  background: rgba(255,255,255,0.10);
-  position: relative;
-  overflow: hidden;
-  margin: 10px 0;
-}
-
-.skeletonBlock{
-  height: 92px;
-  border-radius: 14px;
-  background: rgba(255,255,255,0.10);
-  position: relative;
-  overflow: hidden;
-  margin-top: 12px;
-}
-
-.skeletonLine::after,
-.skeletonBlock::after{
-  content:"";
-  position:absolute;
-  inset: 0;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.14), transparent);
-  transform: translateX(-60%);
-  animation: shimmer 900ms ease-in-out infinite;
-}
-
-@keyframes shimmer{
-  to{ transform: translateX(60%); }
-}
-
-.w60{ width: 60%; }
-.w80{ width: 80%; }
-.w90{ width: 90%; }
-.w95{ width: 95%; }
-
-/* Hub grid */
-.grid{
-  display:grid;
-  grid-template-columns: 1fr;
-  gap: 14px;
-  margin-top: 18px;
-}
-@media (min-width: 860px){
-  .grid{ grid-template-columns: repeat(3, 1fr); }
-}
-
-.toolCard{
-  text-decoration:none;
-  color: inherit;
-  border-radius: 18px;
-  border: 1px solid rgba(255,255,255,0.14);
-  background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.07));
-  padding: 16px;
-  box-shadow: 0 18px 55px rgba(0,0,0,0.35);
-  transition: transform 160ms ease, filter 160ms ease;
-}
-.toolCard:hover{
-  transform: translateY(-2px);
-  filter: brightness(1.04);
-}
-.toolIcon{ font-size: 28px; margin-bottom: 10px; }
-.toolTitle{ font-size: 18px; font-weight: 800; margin-bottom: 6px; }
-.toolDesc{ color: rgba(255,255,255,0.75); line-height: 1.45; font-size: 14px; }
-
-/* top nav */
-.topNav{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  margin-bottom: 12px;
-}
-.backLink{
-  color: rgba(255,255,255,0.85);
-  text-decoration:none;
-}
-.backLink:hover{ text-decoration: underline; }
-.crumb{ color: rgba(255,255,255,0.65); }
-
-/* prayer pre */
-.prayerBlock{
-  white-space: pre-wrap;
-  margin: 0;
-  padding: 14px;
-  border-radius: 14px;
-  border: 1px solid rgba(255,255,255,0.14);
-  background: rgba(0,0,0,0.18);
-  color: rgba(255,255,255,0.88);
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
