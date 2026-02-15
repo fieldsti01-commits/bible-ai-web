@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 
 function todayKey() {
-  // YYYY-MM-DD local time
   const d = new Date();
   const yyyy = d.getFullYear();
   const mm = String(d.getMonth() + 1).padStart(2, "0");
@@ -12,74 +11,169 @@ function todayKey() {
 }
 
 export default function Home() {
-  const key = useMemo(() => `daily_prayer_${todayKey()}`, []);
-  const [loading, setLoading] = useState(false);
-  const [prayer, setPrayer] = useState("");
-  const [err, setErr] = useState("");
+  const day = useMemo(() => todayKey(), []);
 
-  async function loadDailyPrayer() {
-    setErr("");
-    setLoading(true);
+  const verseKey = useMemo(() => `ai_verse_${day}`, [day]);
+  const prayerKey = useMemo(() => `ai_prayer_${day}`, [day]);
+
+  const [verseLoading, setVerseLoading] = useState(false);
+  const [verseErr, setVerseErr] = useState("");
+  const [verse, setVerse] = useState(null); // { reference, excerpt, reflection }
+
+  const [prayerLoading, setPrayerLoading] = useState(false);
+  const [prayerErr, setPrayerErr] = useState("");
+  const [prayer, setPrayer] = useState("");
+
+  async function loadVerseOfDay(force = false) {
+    setVerseErr("");
+    setVerseLoading(true);
 
     try {
-      // Cache check
-      const cached = typeof window !== "undefined" ? localStorage.getItem(key) : null;
-      if (cached) {
-        setPrayer(cached);
-        setLoading(false);
-        return;
+      if (!force) {
+        const cached = localStorage.getItem(verseKey);
+        if (cached) {
+          setVerse(JSON.parse(cached));
+          setVerseLoading(false);
+          return;
+        }
       }
-
-      const prompt = `
-Write ONE cohesive daily prayer that someone can pray today.
-Requirements:
-- Warm, disciple-like tone (gentle, not cheesy).
-- 180–260 words.
-- No headings, no bullet points, no explanations.
-- End with "Amen."
-`.trim();
 
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          prompt,
-          mode: "prayer",
-          tone: "gentle",
+          mode: "verse",
+          prompt: `
+Create a Verse of the Day in this exact format:
+REFERENCE: <book chapter:verse>
+EXCERPT: <very short excerpt, max ~20 words>
+REFLECTION: <one sentence reflection>
+
+Notes:
+- Use CEB-style reference formatting.
+- Keep the excerpt short (no long Bible quotes).
+`.trim(),
         }),
       });
 
       const text = await res.text();
-      if (!res.ok) throw new Error(text || "Request failed.");
+      if (!res.ok) throw new Error(text || "Verse request failed.");
+
+      // Parse the 3 lines reliably
+      const ref = (text.match(/REFERENCE:\s*(.*)/i)?.[1] || "").trim();
+      const excerpt = (text.match(/EXCERPT:\s*(.*)/i)?.[1] || "").trim();
+      const reflection = (text.match(/REFLECTION:\s*(.*)/i)?.[1] || "").trim();
+
+      const v = { reference: ref, excerpt, reflection };
+      setVerse(v);
+      localStorage.setItem(verseKey, JSON.stringify(v));
+    } catch (e) {
+      setVerseErr(e?.message || "Couldn’t load verse today.");
+    } finally {
+      setVerseLoading(false);
+    }
+  }
+
+  async function loadDailyPrayer(force = false) {
+    setPrayerErr("");
+    setPrayerLoading(true);
+
+    try {
+      if (!force) {
+        const cached = localStorage.getItem(prayerKey);
+        if (cached) {
+          setPrayer(cached);
+          setPrayerLoading(false);
+          return;
+        }
+      }
+
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mode: "prayer",
+          prompt: `
+Write ONE cohesive daily prayer someone can pray today.
+- Gentle, disciple-like tone (not cheesy)
+- 180–260 words
+- No headings, no bullet points
+- End with "Amen."
+`.trim(),
+        }),
+      });
+
+      const text = await res.text();
+      if (!res.ok) throw new Error(text || "Prayer request failed.");
 
       setPrayer(text);
-      localStorage.setItem(key, text);
+      localStorage.setItem(prayerKey, text);
     } catch (e) {
-      setErr(e?.message || "Something went wrong.");
+      setPrayerErr(e?.message || "Couldn’t load prayer today.");
     } finally {
-      setLoading(false);
+      setPrayerLoading(false);
     }
   }
 
   useEffect(() => {
-    loadDailyPrayer();
+    loadVerseOfDay(false);
+    loadDailyPrayer(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
     <main className="page">
-      <div className="shell">
+      <div className="pageContent">
         <header className="hero">
           <h1 className="title">Worship Hub</h1>
-          <p className="subtitle">
-            Daily prayer + tools for Guidance, Devotional, and Prayer.
-          </p>
+          <p className="subtitle">Daily verse + daily prayer (AI), refreshed every day.</p>
         </header>
 
-        <section className="glass card fadeIn">
+        {/* Verse of the Day */}
+        <section className="glass card fadeIn" style={{ marginTop: 16 }}>
+          <div className="sectionTitle">Verse of the Day</div>
+
+          {verseLoading && (
+            <>
+              <div className="skeleton" />
+              <div className="skeleton short" />
+            </>
+          )}
+
+          {!verseLoading && verseErr && (
+            <p className="paragraph">{verseErr}</p>
+          )}
+
+          {!verseLoading && verse && (
+            <>
+              <div className="pill" style={{ display: "inline-flex", marginTop: 10 }}>
+                {verse.reference || "—"}
+              </div>
+              <p className="paragraph" style={{ marginTop: 12 }}>
+                <span className="gold">“{verse.excerpt || "—"}”</span>
+              </p>
+              <p className="muted" style={{ marginTop: 10 }}>
+                {verse.reflection || ""}
+              </p>
+            </>
+          )}
+
+          <button
+            className="secondaryBtn"
+            style={{ marginTop: 14 }}
+            onClick={() => loadVerseOfDay(true)}
+            disabled={verseLoading}
+            type="button"
+          >
+            {verseLoading ? "Refreshing…" : "Refresh Verse"}
+          </button>
+        </section>
+
+        {/* Daily Prayer */}
+        <section className="glass card fadeIn" style={{ marginTop: 16 }}>
           <div className="sectionTitle">Daily Prayer</div>
 
-          {loading && (
+          {prayerLoading && (
             <>
               <div className="skeleton" />
               <div className="skeleton" />
@@ -87,28 +181,26 @@ Requirements:
             </>
           )}
 
-          {err && !loading && (
-            <p className="paragraph" style={{ opacity: 0.9 }}>
-              Couldn’t load today’s prayer. Tap refresh.
-            </p>
+          {!prayerLoading && prayerErr && (
+            <p className="paragraph">{prayerErr}</p>
           )}
 
-          {!loading && !err && prayer && (
-            <p className="paragraph" style={{ whiteSpace: "pre-wrap" }}>
+          {!prayerLoading && prayer && (
+            <p className="paragraph" style={{ whiteSpace: "pre-wrap", marginTop: 10 }}>
               {prayer}
             </p>
           )}
 
-          <div style={{ display: "flex", gap: 10, marginTop: 14, flexWrap: "wrap" }}>
-            <button className="button" type="button" onClick={loadDailyPrayer} disabled={loading}>
-              {loading ? "Refreshing…" : "Refresh"}
-            </button>
-          </div>
+          <button
+            className="secondaryBtn"
+            style={{ marginTop: 14 }}
+            onClick={() => loadDailyPrayer(true)}
+            disabled={prayerLoading}
+            type="button"
+          >
+            {prayerLoading ? "Refreshing…" : "Refresh Prayer"}
+          </button>
         </section>
-
-        <div className="hint" style={{ marginTop: 14 }}>
-          Use the tabs below to switch between tools.
-        </div>
       </div>
     </main>
   );

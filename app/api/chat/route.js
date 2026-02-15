@@ -34,6 +34,14 @@ If mode is "devotional":
 - Provide: Title (short), Theme (1 sentence), Scripture (5–7 references with 1–2 sentence summaries), Encouragement (short paragraph), Prayer (short).
 - Avoid long quotations.
 
+If mode is "verse":
+- Output exactly 3 lines:
+  REFERENCE: ...
+  EXCERPT: ...
+  REFLECTION: ...
+- Keep EXCERPT very short (max ~20 words). Do not paste long Scripture.
+- Use CEB-style reference formatting.
+
 If mode is "prayer":
 - Write ONE cohesive prayer someone can pray aloud.
 - No section headers. No bullet points. No explanation.
