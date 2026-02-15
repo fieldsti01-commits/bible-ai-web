@@ -1,103 +1,149 @@
-// app/api/chat/route.js
-
 export async function POST(req) {
   try {
     const body = await req.json().catch(() => ({}));
 
-    // accept either "prompt" or "input"
     const prompt = String(body.prompt ?? body.input ?? "").trim();
-    const mode = String(body.mode ?? "guidance").trim(); // "guidance" | "devotional" | "prayer"
-    const tone = String(body.tone ?? "gentle").trim();
+    const mode = String(body.mode ?? "prayer").trim();
+    const tone = String(body.tone ?? "gentle-but-challenging").trim();
 
-    if (!prompt) {
-      return new Response("No prompt provided.", { status: 400 });
+    if (!prompt && mode !== "daily_prayer" && mode !== "verse_of_the_day") {
+      return Response.json({ error: "No prompt provided." }, { status: 400 });
     }
 
-    // --- SYSTEM INSTRUCTIONS PER MODE ---
-    const system = `
-You are "Bible AI" — gentle, pastoral, disciple-like, and grounded in Scripture.
+    // ---- MODE PROMPTS ----
+    const baseStyle = `
+You are "Bible AI" — warm, pastoral, and clear (never cheesy).
 Tone: ${tone}
-
-GENERAL RULES:
-- Do NOT output raw JSON.
-- Do NOT include the word "Debug".
-- Keep it clear, warm, and usable.
-
-MODE BEHAVIOR:
-
-If mode is "guidance":
-- Provide: Guidance, Scripture (5–7 references), Practical Steps (5–7 bullets), Reflection (1 question), Optional Prayer (short).
-- Scripture should be summarized in 1–2 sentences each (avoid long quotes).
-- If you include a short quote, keep it very short.
-
-If mode is "devotional":
-- Provide: Title (short), Theme (1 sentence), Scripture (5–7 references with 1–2 sentence summaries), Encouragement (short paragraph), Prayer (short).
-- Avoid long quotations.
-
-If mode is "verse":
-- Output exactly 3 lines:
-  REFERENCE: ...
-  EXCERPT: ...
-  REFLECTION: ...
-- Keep EXCERPT very short (max ~20 words). Do not paste long Scripture.
-- Use CEB-style reference formatting.
-
-If mode is "prayer":
-- Write ONE cohesive prayer someone can pray aloud.
-- No section headers. No bullet points. No explanation.
-- 200–350 words.
-- Include 1–2 very short Scripture phrases at most (optional), otherwise just reference ideas.
-- End with "Amen.".
+Rules:
+- Never output raw JSON unless explicitly asked.
+- Use short scripture quotes (1–2 sentences max), otherwise summarize and cite references.
+- Keep formatting clean and readable.
 `.trim();
 
-    // --- CALL OPENAI ---
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) {
-      return new Response(
-        "Missing credentials. Set OPENAI_API_KEY in environment variables.",
-        { status: 500 }
-      );
-    }
+    const promptsByMode = {
+      guidance: `
+${baseStyle}
 
-    const userMessage = `
-Mode: ${mode}
-User request: ${prompt}
+Task:
+Give disciple-like counsel anchored in Scripture.
+
+Output format:
+1) Guidance (2–5 paragraphs)
+2) Scripture References (list 3–6 references; optional brief 1–2 sentence quote total)
+3) Practical Steps (3–7 bullets)
+4) Reflection Question (1 question)
+5) Short Prayer (3–6 lines)
+
+User question:
+"${prompt}"
+`.trim(),
+
+      devotional: `
+${baseStyle}
+
+Task:
+Create a short daily devotional about the theme provided.
+
+Output format:
+Title:
+Scripture: (1 key reference, optionally 1 short quote)
+Encouragement: (2–4 paragraphs)
+Today’s Practice: (3 bullets)
+Prayer: (4–8 lines)
+
+Theme:
+"${prompt}"
+`.trim(),
+
+      prayer: `
+${baseStyle}
+
+Task:
+Write a prayer the user can pray immediately.
+
+Output format:
+A.C.T.S sections with headings:
+Adoration:
+Confession:
+Thanksgiving:
+Supplication:
+
+Prayer focus:
+"${prompt}"
+`.trim(),
+
+      daily_prayer: `
+${baseStyle}
+
+Task:
+Write a daily prayer for today that feels fresh and grounded.
+Length: 120–220 words.
+No headings, just a beautiful prayer ending with “Amen.”
+`.trim(),
+
+      verse_of_the_day: `
+${baseStyle}
+
+Task:
+Provide ONE “Verse of the Day” with a short reflection.
+
+Output format:
+Verse of the Day: <Book Chapter:Verse>
+(Quote 1–2 sentences max)
+Reflection: 2–4 sentences
+Prayer: 2–3 lines
+
+Important:
+Pick a verse suitable for a broad Christian audience.
+`.trim(),
+    };
+
+    const systemPrompt =
+      promptsByMode[mode] ??
+      `
+${baseStyle}
+Task: Respond helpfully and clearly.
+
+User:
+"${prompt}"
 `.trim();
 
+    // ---- OPENAI CALL (Chat Completions) ----
     const res = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
-        temperature: 0.7,
-        messages: [
-          { role: "system", content: system },
-          { role: "user", content: userMessage },
-        ],
+        model: process.env.OPENAI_MODEL || "gpt-4o-mini",
+        messages: [{ role: "system", content: systemPrompt }],
+        temperature: 0.8,
       }),
     });
 
     if (!res.ok) {
       const errText = await res.text().catch(() => "");
-      return new Response(errText || "Request failed.", { status: res.status });
+      return Response.json(
+        { error: errText || "OpenAI request failed." },
+        { status: 500 }
+      );
     }
 
-    const data = await res.json();
-    const text = data?.choices?.[0]?.message?.content?.trim() || "";
+    const data = await res.json().catch(() => null);
+    const out =
+      data?.choices?.[0]?.message?.content?.trim?.() ||
+      "No response returned.";
 
-    if (!text) {
-      return new Response("Empty response from model.", { status: 500 });
-    }
-
-    // IMPORTANT: Return plain text (not JSON)
-    return new Response(text, {
+    // Return plain text so your pages can do: const text = await res.text()
+    return new Response(out, {
       status: 200,
       headers: { "Content-Type": "text/plain; charset=utf-8" },
     });
   } catch (e) {
-    return new Response(e?.message || "Something went wrong.", { status: 500 });
+    return Response.json(
+      { error: e?.message || "Server error." },
+      { status: 500 }
+    );
   }
 }
