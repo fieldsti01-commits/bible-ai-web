@@ -1,4 +1,3 @@
-// app/page.js
 import Link from "next/link";
 
 export default function Home() {
@@ -8,23 +7,22 @@ export default function Home() {
         <header className="hero">
           <h1 className="title">Worship Hub</h1>
           <p className="subtitle">
-            Three tools for daily worship: Guidance, Devotional, and Prayer — gentle, disciple-like, with Scripture.
+            Three tools for daily worship.
           </p>
-          <div className="pill">CEB • Pastoral mentor tone • Built by you</div>
         </header>
 
-        <section className="grid">
-          <Link href="/" className="glass toolCard">
+        <div className="grid">
+          <Link href="/guidance" className="glass toolCard">
             <div className="toolTop">
               <div className="icon">🕊️</div>
               <div>
                 <p className="toolName">Guidance</p>
-                <p className="toolDesc">Disciple-like counsel with Scripture, steps, reflection, and prayer.</p>
+                <p className="toolDesc">
+                  Disciple-like counsel with Scripture and reflection.
+                </p>
               </div>
             </div>
-            <div className="cta">
-              Open <span style={{ opacity: 0.7 }}>→</span>
-            </div>
+            <div className="cta">Enter →</div>
           </Link>
 
           <Link href="/devotional" className="glass toolCard">
@@ -32,12 +30,12 @@ export default function Home() {
               <div className="icon">📖</div>
               <div>
                 <p className="toolName">Daily Devotional</p>
-                <p className="toolDesc">A short devotional: theme, Scripture, encouragement, and a prayer.</p>
+                <p className="toolDesc">
+                  Scripture + encouragement for today.
+                </p>
               </div>
             </div>
-            <div className="cta">
-              Open <span style={{ opacity: 0.7 }}>→</span>
-            </div>
+            <div className="cta">Enter →</div>
           </Link>
 
           <Link href="/prayer" className="glass toolCard">
@@ -45,17 +43,13 @@ export default function Home() {
               <div className="icon">🙏</div>
               <div>
                 <p className="toolName">Prayer Builder</p>
-                <p className="toolDesc">Guided prayer in 4 parts: Adoration, Confession, Thanks, Requests.</p>
+                <p className="toolDesc">
+                  Guided prayer for any focus.
+                </p>
               </div>
             </div>
-            <div className="cta">
-              Open <span style={{ opacity: 0.7 }}>→</span>
-            </div>
+            <div className="cta">Enter →</div>
           </Link>
-        </section>
-
-        <div className="footer">
-          Tip: Keep it simple first. Then we’ll add animations, transitions, and loading states per tool.
         </div>
       </div>
     </main>
